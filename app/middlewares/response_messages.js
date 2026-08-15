@@ -1,0 +1,26 @@
+const responseMessages = {
+  1001: 'Decode failed to authenticate.',
+  1002: 'Redis token failed to authenticate.',
+  1003: 'Token parse failed to authenticate.',
+  1004: 'You have not Authorized. No Token',
+  1005: 'You have not Authorized to access this resource',
+  1006: 'OTP sent to',
+  1007: 'Failed to send OTP',
+  1008: 'OTP verified successfully',
+  1009: 'OTP is incorrect',
+  1010: 'OTP expired',
+  1011: 'User registered successfully',
+  1012: 'Logged in successfully',
+  1013: 'Logged out successfully',
+  1014: 'Password is incorrect',
+  1015: 'Email already exists',
+  1016: 'Mobile number already exists',
+  1017: 'Something went wrong',
+  1018: 'Account created successfully!',
+  1019: 'User not found',
+  1020: 'Your account is inactive. Please contact support.',
+  1021: 'Your account has been deleted. Please contact support.',
+  1022: 'Too many requests. Please try again later.',
+};
+
+module.exports = responseMessages;
