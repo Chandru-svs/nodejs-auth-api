@@ -17,11 +17,28 @@ client.on('error', (err) => {
   console.error('Redis Client Error:', err.message);
 });
 
-// Connect the client when module is loaded
-if (!client.isOpen) {
-  client.connect().catch(err => {
-    console.error('Failed to connect to Redis:', err.message);
-  });
-}
+// Export connect and close functions for explicit lifecycle management
+const connectRedis = async () => {
+  if (!client.isOpen) {
+    try {
+      await client.connect();
+    } catch (err) {
+      console.error('Failed to connect to Redis:', err.message);
+      throw err;
+    }
+  }
+};
+
+const closeRedis = async () => {
+  if (client.isOpen) {
+    try {
+      await client.disconnect();
+    } catch (err) {
+      console.error('Failed to disconnect from Redis:', err.message);
+    }
+  }
+};
 
 module.exports = client;
+module.exports.connectRedis = connectRedis;
+module.exports.closeRedis = closeRedis;
