@@ -17,4 +17,11 @@ client.on('error', (err) => {
   console.error('Redis Client Error:', err.message);
 });
 
+// Connect the client when module is loaded
+if (!client.isOpen) {
+  client.connect().catch(err => {
+    console.error('Failed to connect to Redis:', err.message);
+  });
+}
+
 module.exports = client;

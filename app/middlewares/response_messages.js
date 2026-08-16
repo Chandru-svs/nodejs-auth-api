@@ -1,7 +1,7 @@
 const responseMessages = {
-  1001: 'Decode failed to authenticate.',
-  1002: 'Redis token failed to authenticate.',
-  1003: 'Token parse failed to authenticate.',
+  1001: 'Session is invalid. Please login again.',
+  1002: 'Your login has expired. Please login again.',
+  1003: 'Unable to verify your session. Please try again.',
   1004: 'You have not Authorized. No Token',
   1005: 'You have not Authorized to access this resource',
   1006: 'OTP sent to',
@@ -21,6 +21,16 @@ const responseMessages = {
   1020: 'Your account is inactive. Please contact support.',
   1021: 'Your account has been deleted. Please contact support.',
   1022: 'Too many requests. Please try again later.',
+  1023: 'Token refreshed successfully',
+  1024: 'Invalid or expired refresh token',
+  1025: 'No active session found',
+  1026: 'If the account exists, a password reset link will be sent shortly',
+  1027: 'Password reset successful',
+  1028: 'Password changed successfully',
+  1029: 'Current password is incorrect',
+  1030: 'Password reset token is invalid or expired',
+  1031: 'Profile retrieved successfully',
+  1115: 'Password reset token expired',
 };
 
 module.exports = responseMessages;

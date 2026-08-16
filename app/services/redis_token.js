@@ -1,6 +1,7 @@
 const { REDIS_SERVER_NOT_CONNECTED, redisTokenExpireIn } = require('../config/env.config');
 const redisClient = require('./redis_service');
 const jwtHelper = require('./jwt_helper');
+const responseMessages = require('../middlewares/response_messages');
 
 const crypto = require('node:crypto');
 
@@ -37,49 +38,20 @@ const setTokenOnRedis = async (req, user_id, device_id, ip, roleType, roleId) =>
   const accessToken = jwtHelper.signAccessToken(payload);
   const refreshToken = jwtHelper.signRefreshToken(payload);
 
-  let redisKey;
-  if (getDevice.deviceType === 'mobile') {
-    redisKey = `${user_id}:mobile`;
-  } else if (getDevice.deviceType === 'tablet') {
-    if (req.headers?.mobile_app_package) {
-      redisKey = `${user_id}:tablet-app`;
-    } else {
-      redisKey = `${user_id}:tablet-web`;
-    }
-  } else {
-    redisKey = `${user_id}:web`;
-  }
+  const redisKey = `${user_id}:${getDevice.deviceType}`;
 
   const refreshTokenTTL = parseInt(redisTokenExpireIn, 10);
 
-  const pipeline = redisClient.multi();
-  pipeline.del(redisKey);
-  pipeline.set(redisKey, refreshToken, 'EX', refreshTokenTTL);
-  await pipeline.exec();
+  await redisClient.set(redisKey, refreshToken, {
+    EX: refreshTokenTTL,
+  });
 
   return { accessToken, refreshToken };
 };
 
 const redisDecodeRefreshToken = async (req, user_id, deviceType) => {
-  const pinged = await redisClient.ping();
-  console.log('pinged', pinged);
-  if (!pinged || pinged !== 'PONG') {
-    return REDIS_SERVER_NOT_CONNECTED;
-  }
-
-  let redisKey;
-  if (deviceType === 'mobile') {
-    redisKey = `${user_id}:mobile`;
-  } else if (deviceType === 'tablet') {
-    redisKey = 'tablet';
-    if (req.headers?.mobile_app_package === 'bems') {
-      redisKey = `${user_id}:tablet-app`;
-    } else {
-      redisKey = `${user_id}:tablet-web`;
-    }
-  } else {
-    redisKey = `${user_id}:web`;
-  }
+  const getDevice = await findDeviceType(req);
+  const redisKey = `${user_id}:${getDevice.deviceType}`;
 
   const tokenRes = await redisClient.get(redisKey);
   if (tokenRes) {
@@ -88,47 +60,75 @@ const redisDecodeRefreshToken = async (req, user_id, deviceType) => {
   return tokenRes;
 };
 
-const collectTokens = async (user_id, device_id, ip, deviceType) => {
-  const pinged = await redisClient.ping();
-  if (!pinged || pinged !== 'PONG') {
-    return REDIS_SERVER_NOT_CONNECTED;
+const collectTokens = async (user_id, device_id, ip, deviceType, req) => {
+  const getDevice = await findDeviceType(req);
+
+  const redisKey = `${user_id}:${getDevice.deviceType}`;
+
+  let redisResp;
+  try {
+    redisResp = await redisClient.get(redisKey);
+  } catch (error) {
+    return {
+      success: false,
+      statusCode: 503,
+      msg: responseMessages[1003],
+    };
   }
-
-  let redisKey;
-
-  if (deviceType === 'mobile') {
-    redisKey = `${user_id}:mobile`;
-  } else if (deviceType === 'tablet') {
-    redisKey = `${user_id}:tablet`;
-  } else {
-    redisKey = `${user_id}:web`;
-  }
-
-  const redisResp = await redisClient.get(redisKey);
-
+  // console.log('redisResp', redisResp)
   if (!redisResp) {
-    console.log(`No active session for key: ${redisKey}`);
-    return [];
+    return {
+      success: false,
+      statusCode: 401,
+      msg: responseMessages[1009],
+    };
   }
 
   try {
-    const decoded = await jwtHelper.verifyRefreshToken(redisResp);
+    const decodedRefreshToken = jwtHelper.verifyAccessToken(redisResp);
 
-    if (decoded) {
-      if (deviceType === 'web') {
-        return [decoded];
-      }
-      if (decoded.deviceType === deviceType && decoded.device_id === device_id) {
-        return [decoded];
-      }
+    if (
+      decodedRefreshToken &&
+      decodedRefreshToken.deviceType === deviceType &&
+      decodedRefreshToken.device_id === device_id
+    ) {
+      return { success: true, session: decodedRefreshToken };
     }
 
-    console.log('Mismatch deviceType or IP for user:', user_id);
-    return [];
+    return {
+      success: false,
+      statusCode: 401,
+      msg: responseMessages[1003],
+    };
   } catch (error) {
-    console.error('Refresh token verification failed:', error);
     await redisClient.del(redisKey);
-    return [];
+    if (error.name === 'TokenExpiredError') {
+      return {
+        success: false,
+        statusCode: 401,
+        msg: responseMessages[1002],
+      };
+    }
+
+    return {
+      success: false,
+      statusCode: 401,
+      msg: responseMessages[1001],
+    };
+  }
+};
+
+const removeTokenFromRedis = async (user_id, deviceType) => {
+  const redisKey = `${user_id}:${deviceType}`;
+  const result = await redisClient.del(redisKey);
+}
+
+const removeAllTokensFromRedis = async (user_id) => {
+  const deviceTypes = ['web', 'mobile', 'tablet'];
+
+  for (const deviceType of deviceTypes) {
+    const redisKey = `${user_id}:${deviceType}`;
+    await redisClient.del(redisKey);
   }
 };
 
@@ -136,4 +136,6 @@ module.exports = {
   setTokenOnRedis,
   redisDecodeRefreshToken,
   collectTokens,
+  removeTokenFromRedis,
+  removeAllTokensFromRedis,
 };

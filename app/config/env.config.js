@@ -17,7 +17,7 @@ const envConfigs = {
   REDIS_SERVER_NOT_CONNECTED: 'REDIS_SERVER_NOT_CONNECTED',
   accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRE_TIME,
   refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRE_TIME,
-  redisTokenExpireIn: process.env.REDIS_TOKEN_EXPIRE_TIME,
+  redisTokenExpireIn: process.env.REDIS_REFRESH_TOKEN_EXPIRE_IN_SECONDS,
   otpExpireIn: process.env.OTP_EXPIRE_TIME,
   sms: {
     apiKey: process.env.SMS_API_KEY,

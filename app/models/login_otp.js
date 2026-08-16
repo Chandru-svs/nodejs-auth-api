@@ -9,6 +9,7 @@ const otpSchema = mongoose.Schema(
     attempts: { type: Number, default: 0 },
     blockedUntil: { type: Date, default: null },
     meta: { ip: String, userAgent: String },
+    purpose: { type: String, enum: ['login', 'forgot_password'], default: 'login' },
   },
   { timestamps: true, versionKey: false }
 );

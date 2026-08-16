@@ -11,6 +11,7 @@ const config = require('./app/config/env.config');
 const appRoutes = require('./app/routes/__index');
 const connectDB = require('./app/config/db.config');
 const responseHandler = require('./app/middlewares/response_handler');
+const redisClient = require('./app/services/redis_service');
 
 const app = express();
 
@@ -26,7 +27,6 @@ const allowedOrigins = process.env.CORS_ORGINS.split(',');
 
 const corsOptions = {
   origin: function (origin, callback) {
-    console.log('origin index', allowedOrigins.indexOf(origin))
     if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
       callback(null, true);
     } else {
@@ -72,13 +72,19 @@ connectDB().then(() => {
 // Graceful shutdown
 process.on('SIGINT', async () => {
   await mongoose.connection.close();
-  console.log('MongoDB connection closed - App terminated');
+  if (redisClient.isOpen) {
+    await redisClient.disconnect();
+  }
+  console.log('MongoDB and Redis connections closed - App terminated');
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   await mongoose.connection.close();
-  console.log('MongoDB connection closed - SIGTERM received');
+  if (redisClient.isOpen) {
+    await redisClient.disconnect();
+  }
+  console.log('MongoDB and Redis connections closed - SIGTERM received');
   process.exit(0);
 });
 

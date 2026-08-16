@@ -46,7 +46,6 @@ module.exports = {
   getDateFilterQuery: (dateFilter, dateField = 'createdAt') => {
     let startDate, endDate;
 
-    console.log('dateFilter----------', dateFilter)
     switch (dateFilter) {
       case 'today':
         startDate = moment().startOf('day').toDate();

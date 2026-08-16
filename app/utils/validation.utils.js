@@ -2,7 +2,7 @@ const commonEmailTypos = [
   // Gmail typos
   'gamil.com', 'gmai.com', 'gmial.com', 'gmaill.com', 'gmil.com',
   'gmal.com', 'gnail.com', 'gmaile.com', 'gmail.co', 'gmail.cm',
-  'gmail.cpm', 'gmail.ocm', 'gmail.con', 'gmail.vom', 'gmail.comm',
+  'gmail.cpm', 'gmail.ocm', 'gmail.con', 'gmail.vom',
 
   // Yahoo typos
   'yaho.com', 'yahooo.com', 'yhoo.com', 'yaho.co', 'yahou.com',
@@ -16,6 +16,17 @@ const commonEmailTypos = [
 ];
 
 module.exports = {
+  isTypoEmail: (val) => {
+    const lower = val.toLowerCase();
+    return commonEmailTypos.some((typo) => {
+      if (!typo.startsWith('.')) {
+        const domain = lower.split('@')[1];
+        return domain === typo;
+      }
+
+      return lower.endsWith(typo);
+    });
+  },
   getValidationMessage: (joiErrors = []) => {
     joiErrors.forEach((err) => {
       switch (err.code) {
