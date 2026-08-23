@@ -8,6 +8,30 @@
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
+  "jest": {
+    "projects": [
+      {
+        "displayName": "integration",
+        "testMatch": [
+          "<rootDir>/tests/**/*.test.js"
+        ],
+        "testPathIgnorePatterns": [
+          "<rootDir>/tests/unit/"
+        ],
+        "globalSetup": "<rootDir>/tests/setup/globalSetup.js",
+        "globalTeardown": "<rootDir>/tests/setup/globalTeardown.js",
+        "setupFilesAfterEnv": [
+          "<rootDir>/tests/setup/mongodb.js"
+        ]
+      },
+      {
+        "displayName": "unit",
+        "testMatch": [
+          "<rootDir>/tests/unit/**/*.test.js"
+        ]
+      }
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Chandru-svs/nodejs-auth-api.git"
@@ -35,6 +59,7 @@
   },
   "devDependencies": {
     "jest": "^30.4.2",
+    "mongodb-memory-server": "^11.2.0",
     "nodemon": "^3.1.14",
     "supertest": "^7.2.2"
   }

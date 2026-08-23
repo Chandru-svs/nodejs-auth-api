@@ -76,6 +76,7 @@ module.exports = {
             role: 1,
             password: 1,
             img_url: 1,
+            status: 1
           })
         .populate('role', 'name')
         .lean();
@@ -101,7 +102,7 @@ module.exports = {
         checkExists.role._id.toString(),
       );
 
-      db.user.updateOne({ _id: checkExists._id }, { $set: { lastLogin: new Date() } })
+      await db.user.updateOne({ _id: checkExists._id }, { $set: { lastLogin: new Date() } })
         .catch(console.error);
 
       delete checkExists.password;
